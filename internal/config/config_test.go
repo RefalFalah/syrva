@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/RefalFalah/syrva/internal/host"
@@ -98,22 +97,28 @@ func TestInvalidSavePreservesConfig(t *testing.T) {
 }
 
 func TestDefaultDir(t *testing.T) {
-	base := t.TempDir()
-	switch runtime.GOOS {
-	case "windows":
-		t.Setenv("APPDATA", base)
-	case "darwin":
-		t.Setenv("HOME", base)
-		base = filepath.Join(base, "Library", "Application Support")
-	default:
-		t.Setenv("XDG_CONFIG_HOME", base)
-	}
-	got, err := DefaultDir()
-	if err != nil || got != filepath.Join(base, "syrva") {
-		t.Fatalf("DefaultDir = %q, %v", got, err)
-	}
-	if strings.Contains(got, "~") {
-		t.Fatal("unexpanded home")
+	// A literal tilde is valid in a path, including Windows short names used
+	// by hosted runners. Only a relative path suggests an unexpanded home.
+	for _, name := range []string{"config", "RUNNER~1"} {
+		t.Run(name, func(t *testing.T) {
+			base := filepath.Join(t.TempDir(), name)
+			switch runtime.GOOS {
+			case "windows":
+				t.Setenv("APPDATA", base)
+			case "darwin":
+				t.Setenv("HOME", base)
+				base = filepath.Join(base, "Library", "Application Support")
+			default:
+				t.Setenv("XDG_CONFIG_HOME", base)
+			}
+			got, err := DefaultDir()
+			if err != nil || got != filepath.Join(base, "syrva") {
+				t.Fatalf("DefaultDir = %q, %v", got, err)
+			}
+			if !filepath.IsAbs(got) {
+				t.Fatalf("config directory must be absolute: %q", got)
+			}
+		})
 	}
 }
 
