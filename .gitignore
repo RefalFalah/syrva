@@ -1,0 +1,10 @@
+/syrva
+/syrva.exe
+/dist/
+/coverage.out
+/config.yaml
+/hosts.yaml
+/local-config/
+*.test
+*.test.exe
+.DS_Store

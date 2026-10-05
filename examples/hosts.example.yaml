@@ -1,0 +1,24 @@
+# Copy host entries into your own hosts.yaml. Do not store passwords or key contents.
+hosts:
+  websku-dev:
+    name: Websku Development
+    host: dev.example.com
+    user: root
+    port: 22
+    identity_file: ~/.ssh/id_ed25519
+    tags:
+      - development
+      - websku
+    working_directory: /var/www/websku
+    commands:
+      logs:
+        description: Laravel Logs
+        command: tail -f storage/logs/laravel.log
+      nginx:
+        description: Status Nginx
+        command: systemctl status nginx
+    tunnels:
+      mysql:
+        local_port: 3307
+        remote_host: 127.0.0.1
+        remote_port: 3306
